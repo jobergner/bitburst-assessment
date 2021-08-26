@@ -3,6 +3,9 @@ package main
 import (
 	"assessment/pkg/get"
 	"assessment/pkg/handle"
+
+	"github.com/joho/godotenv"
+
 	"assessment/pkg/persist"
 	"flag"
 	"fmt"
@@ -20,6 +23,10 @@ var objectLifespan = flag.Int64("ol", 30, "how long an object will be persisted 
 
 func main() {
 	flag.Parse()
+	err := godotenv.Load(".env")
+	if err != nil {
+		panic(fmt.Errorf("error reading env file: %s", err))
+	}
 
 	var persistence persist.Persistor
 	if !*useMockDB {
@@ -28,7 +35,7 @@ func main() {
 		persistence = persist.NewMockPersistence()
 	}
 
-	err := persistence.Connect()
+	err = persistence.Connect()
 	if err != nil {
 		panic(err)
 	}
