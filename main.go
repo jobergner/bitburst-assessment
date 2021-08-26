@@ -1,14 +1,13 @@
 package main
 
 import (
-	"assessment/pkg/get"
 	"assessment/pkg/handle"
+	"assessment/pkg/object"
 	"assessment/pkg/persist"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
 )
 
 type callbackBody struct {
@@ -38,15 +37,37 @@ func callbackHandler(h *handle.Handler) func(http.ResponseWriter, *http.Request)
 }
 
 func main() {
-
-	mockPers := persist.NewMockPersistence()
-	mockGetter := get.MockObjectGetter{}
-	h := handle.NewHandler(mockPers, &mockGetter, time.Second*5)
-
-	http.HandleFunc("/callback", callbackHandler(h))
-
-	err := http.ListenAndServe(":9090", nil)
+	postgres := persist.NewPostgres()
+	err := postgres.Connect()
 	if err != nil {
-		panic((fmt.Errorf("error serving: %s", err)))
+		panic(err)
 	}
+
+	err = postgres.WriteObject(object.Object{ObjectID: 2, Online: true, LastSeen: 2, ValidUntil: 3})
+	if err != nil {
+		panic(err)
+	}
+
+	objs, err := postgres.GetObjects()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(objs)
+
+	err = postgres.DeleteObject(1, 2)
+	if err != nil {
+		panic(err)
+	}
+
+	// mockPers := persist.NewMockPersistence()
+	// mockPers.Connect()
+	// mockGetter := get.MockObjectGetter{}
+	// h := handle.NewHandler(mockPers, &mockGetter, time.Second*5)
+
+	// http.HandleFunc("/callback", callbackHandler(h))
+
+	// err := http.ListenAndServe(":9090", nil)
+	// if err != nil {
+	// 	panic((fmt.Errorf("error serving: %s", err)))
+	// }
 }

@@ -1,4 +1,5 @@
-CREATE TABLE IF NOT EXISTS item (
-  ItemID int NOT NULL,
-  Online boolean NOT NULL
+CREATE TABLE IF NOT EXISTS object (
+  id INT PRIMARY KEY,
+  online BOOLEAN NOT NULL,
+  lastSeen BIGINT NOT NULL
 );

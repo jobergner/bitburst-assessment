@@ -7,6 +7,7 @@ import (
 
 type persistor interface {
 	WriteObject(object.Object) error
+	GetObjects() (map[int]object.Object, error)
 	DeleteObject(int, int64) error
 }
 
