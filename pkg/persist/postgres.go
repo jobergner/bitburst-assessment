@@ -19,11 +19,16 @@ func NewPostgres() *Postgres {
 }
 
 func (p *Postgres) Connect() error {
-	connStr := "user=postgres password=postgrespassword dbname=assessment sslmode=disable"
+	connStr := "user=postgres password=postgrespassword dbname=assessment sslmode=disable connect_timeout=5"
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return fmt.Errorf("error while connecting to postgres: %s", err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		return fmt.Errorf("could not successfully connect to db (%s)", err)
 	}
 
 	p.db = db
@@ -37,7 +42,7 @@ func (p *Postgres) WriteObject(o object.Object) error {
 
 	objectExists, err := p.objectExists(o.ObjectID)
 	if err != nil {
-		return fmt.Errorf("error while chicking whether object `%d` exists: %s", o.ObjectID, err)
+		return fmt.Errorf("error while checking whether object `%d` exists: %s", o.ObjectID, err)
 	}
 
 	if objectExists {
@@ -69,7 +74,7 @@ func (p *Postgres) createObject(o object.Object) error {
 
 func (p *Postgres) DeleteObject(objectID int, lastSeen int64) error {
 	p.mu.RLock()
-	defer p.mu.Unlock()
+	defer p.mu.RUnlock()
 
 	rows, err := p.db.Query("DELETE FROM object WHERE id=$1 AND lastSeen=$2", objectID, lastSeen)
 	if err != nil {
@@ -109,7 +114,7 @@ func (p *Postgres) GetObjects() (map[int]object.Object, error) {
 
 func (p *Postgres) objectExists(objectID int) (bool, error) {
 
-	rows, err := p.db.Query("SELECT (id) FROM object WHERE id=$1", objectID)
+	rows, err := p.db.Query("SELECT * FROM object WHERE id=$1", objectID)
 	if err != nil {
 		return false, fmt.Errorf("error finding specific object in db: %s", err)
 	}

@@ -1,73 +1,52 @@
 package main
 
 import (
+	"assessment/pkg/get"
 	"assessment/pkg/handle"
-	"assessment/pkg/object"
 	"assessment/pkg/persist"
-	"encoding/json"
+	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"time"
 )
 
-type callbackBody struct {
-	ObjectIDs []int `json:"object_ids"`
-}
+const (
+	mockObjectSourceIdentifier string = "OBJECT_SOURCE_MOCK"
+)
 
-func callbackHandler(h *handle.Handler) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		b, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("error reading request body: %s", err.Error()), 500)
-			return
-		}
-		defer r.Body.Close()
-
-		var c callbackBody
-		err = json.Unmarshal(b, &c)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("error unmarshalling received body `%s`: %s", string(b), err.Error()), 500)
-			return
-		}
-
-		for _, objectID := range c.ObjectIDs {
-			go h.Handle(objectID)
-		}
-	}
-}
+var objectSource = flag.String("src", mockObjectSourceIdentifier, "endpoint url for object source, uses mock when not specified")
+var useDB = flag.Bool("use_db", false, "whether to use the postgres db or a in-memory mock")
+var objectLifespan = flag.Int64("ol", 30, "how long an object will be persisted in seconds, defaults to 30")
 
 func main() {
-	postgres := persist.NewPostgres()
-	err := postgres.Connect()
+	flag.Parse()
+
+	var persistence persist.Persistor
+	if *useDB {
+		persistence = persist.NewPostgres()
+	} else {
+		persistence = persist.NewMockPersistence()
+	}
+
+	err := persistence.Connect()
 	if err != nil {
 		panic(err)
 	}
 
-	err = postgres.WriteObject(object.Object{ObjectID: 2, Online: true, LastSeen: 2, ValidUntil: 3})
-	if err != nil {
-		panic(err)
+	var getter get.Getter
+	if *objectSource != mockObjectSourceIdentifier {
+		getter = get.NewRemoteObjectGetter(*objectSource)
+	} else {
+		getter = &get.MockObjectGetter{}
 	}
 
-	objs, err := postgres.GetObjects()
+	h := handle.NewHandler(persistence, getter, time.Second*time.Duration(*objectLifespan))
+
+	http.HandleFunc("/callback", callbackHandler(h))
+
+	fmt.Println("server running at :9090")
+	err = http.ListenAndServe(":9090", nil)
 	if err != nil {
-		panic(err)
+		panic((fmt.Errorf("error serving: %s", err)))
 	}
-	fmt.Println(objs)
-
-	err = postgres.DeleteObject(1, 2)
-	if err != nil {
-		panic(err)
-	}
-
-	// mockPers := persist.NewMockPersistence()
-	// mockPers.Connect()
-	// mockGetter := get.MockObjectGetter{}
-	// h := handle.NewHandler(mockPers, &mockGetter, time.Second*5)
-
-	// http.HandleFunc("/callback", callbackHandler(h))
-
-	// err := http.ListenAndServe(":9090", nil)
-	// if err != nil {
-	// 	panic((fmt.Errorf("error serving: %s", err)))
-	// }
 }

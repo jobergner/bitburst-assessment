@@ -9,20 +9,22 @@ import (
 	"time"
 )
 
-func NewRemoteObjectGetter() RemoteObjectGetter {
-	return RemoteObjectGetter{
+type RemoteObjectGetter struct {
+	httpClient http.Client
+	url        string
+}
+
+func NewRemoteObjectGetter(url string) *RemoteObjectGetter {
+	return &RemoteObjectGetter{
 		httpClient: http.Client{
 			Timeout: time.Second * 5,
 		},
+		url: url,
 	}
 }
 
-type RemoteObjectGetter struct {
-	httpClient http.Client
-}
-
 func (r RemoteObjectGetter) Get(objectID int) (object.Object, error) {
-	url := fmt.Sprintf("http://localhost:9091/objects/%d", objectID)
+	url := fmt.Sprintf("%s/objects/%d", r.url, objectID)
 
 	resp, err := r.httpClient.Get(url)
 	if err != nil {
