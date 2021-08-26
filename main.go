@@ -15,14 +15,14 @@ const (
 )
 
 var objectSource = flag.String("src", mockObjectSourceIdentifier, "endpoint url for object source, uses mock when not specified")
-var useDB = flag.Bool("use_db", false, "whether to use the postgres db or a in-memory mock")
+var useMockDB = flag.Bool("mock_db", false, "whether to use the postgres db or a in-memory mock")
 var objectLifespan = flag.Int64("ol", 30, "how long an object will be persisted in seconds, defaults to 30")
 
 func main() {
 	flag.Parse()
 
 	var persistence persist.Persistor
-	if *useDB {
+	if !*useMockDB {
 		persistence = persist.NewPostgres()
 	} else {
 		persistence = persist.NewMockPersistence()
