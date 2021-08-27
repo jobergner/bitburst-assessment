@@ -1,10 +1,54 @@
 # Assessment:
+
+## How to Run:
+1. Start Postgres
+```bash
+docker-compose up
+```
+2. Start Service
+```bash
+# uses localhost:9010 as object source
+go run . -src=http://localhost:9010
+```
+3. Start Object Source
+```bash
+# in /objectsource/
+go run .
+```
+The Services should now be able to communicate with another.
+
+## Testing:
+1. Start Postgres
+```bash
+docker-compose up
+```
+2. Run Integration Test
+```bash
+go test ./...
+```
+
+Feel free to mess around in `/integrationtest/main_test.go`.
+
 ## flags
 | flag | description | default|
 |------|------|-----|
 |src|endpoint url for object source eg `http://localhost:9010`| uses mock when not specified|
-|mock_db|whether to use the postgres db or a in-memory mock|false|
+|mock_db|whether to use the postgres db or an in-memory mock|false|
 |ol| the object lifespan in seconds| 30 |
+
+
+## project structure
+| name | description |
+|------|------|
+|`/integrationtest`|contains an integration test (end2end) |
+|`/objectsource`|the service I was provided with|
+|`/pkg/get`|logic for fetching objects from remote or from a mock|
+|`/pkg/handle`|logic for managing objects and their lifespans|
+|`/pkg/object`|nothing but object structure|
+|`/pkg/persist`|logic for object persistence in db or in-memory mock|
+|`/.env`|environment variables read by postgres and service (committed for convenience)|
+|`/docker-compose.yml`|starts dockerized postgres instance (`docker-compose up`)|
+|`/init.sql`|describes table for db|
 
 # Task
 Write a rest-service that listens on localhost:9090 for POST requests on /callback.
