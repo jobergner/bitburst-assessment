@@ -6,12 +6,16 @@ import (
 	"time"
 )
 
-func (h *Handler) Handle(objectID int) {
+func (h *ObjectHandler) Handle(objectID int) {
 	receivedAt := time.Now()
 
 	o, err := h.objectGetter.Get(objectID)
 	if err != nil {
 		log.Println(err)
+		return
+	}
+
+	if !o.Online {
 		return
 	}
 
@@ -27,7 +31,7 @@ func (h *Handler) Handle(objectID int) {
 	go h.deleteWhenExpired(o)
 }
 
-func (h Handler) deleteWhenExpired(o object.Object) {
+func (h ObjectHandler) deleteWhenExpired(o object.Object) {
 	remainingLifespan := o.ValidUntil - time.Now().UnixNano()
 	time.Sleep(time.Duration(remainingLifespan * int64(time.Nanosecond)))
 	h.persistence.DeleteObject(o.ObjectID, o.LastSeen)

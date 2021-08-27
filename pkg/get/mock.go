@@ -13,6 +13,6 @@ func (r MockObjectGetter) Get(objectID int) (object.Object, error) {
 	rand.Seed(time.Now().UnixNano())
 	return object.Object{
 		ObjectID: objectID,
-		Online:   true,
+		Online:   objectID%2 == 0,
 	}, nil
 }

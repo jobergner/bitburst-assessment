@@ -1,12 +1,8 @@
 package main
 
 import (
-	"assessment/pkg/get"
-	"assessment/pkg/handle"
-
 	"github.com/joho/godotenv"
 
-	"assessment/pkg/persist"
 	"flag"
 	"fmt"
 	"net/http"
@@ -15,6 +11,7 @@ import (
 
 const (
 	mockObjectSourceIdentifier string = "OBJECT_SOURCE_MOCK"
+	addr                       string = ":9090"
 )
 
 var objectSource = flag.String("src", mockObjectSourceIdentifier, "endpoint url for object source, uses mock when not specified")
@@ -23,36 +20,26 @@ var objectLifespan = flag.Int64("ol", 30, "how long an object will be persisted 
 
 func main() {
 	flag.Parse()
+
 	err := godotenv.Load(".env")
 	if err != nil {
 		panic(fmt.Errorf("error reading env file: %s", err))
 	}
 
-	var persistence persist.Persistor
-	if !*useMockDB {
-		persistence = persist.NewPostgres()
-	} else {
-		persistence = persist.NewMockPersistence()
+	h := configureObjectHandler()
+
+	mux := http.NewServeMux()
+	mux.Handle("/callback", callbackHandler(h))
+
+	srv := &http.Server{
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		Addr:         addr,
+		Handler:      mux,
 	}
 
-	err = persistence.Connect()
-	if err != nil {
-		panic(err)
-	}
-
-	var getter get.Getter
-	if *objectSource != mockObjectSourceIdentifier {
-		getter = get.NewRemoteObjectGetter(*objectSource)
-	} else {
-		getter = &get.MockObjectGetter{}
-	}
-
-	h := handle.NewHandler(persistence, getter, time.Second*time.Duration(*objectLifespan))
-
-	http.HandleFunc("/callback", callbackHandler(h))
-
-	fmt.Println("server running at :9090")
-	err = http.ListenAndServe(":9090", nil)
+	fmt.Println("server running at", addr)
+	err = srv.ListenAndServe()
 	if err != nil {
 		panic((fmt.Errorf("error serving: %s", err)))
 	}

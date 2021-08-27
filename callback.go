@@ -12,8 +12,8 @@ type callbackBody struct {
 	ObjectIDs []int `json:"object_ids"`
 }
 
-func callbackHandler(h *handle.Handler) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func callbackHandler(h *handle.ObjectHandler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		b, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("error reading request body: %s", err.Error()), 500)
@@ -31,5 +31,5 @@ func callbackHandler(h *handle.Handler) func(http.ResponseWriter, *http.Request)
 		for _, objectID := range c.ObjectIDs {
 			go h.Handle(objectID)
 		}
-	}
+	})
 }

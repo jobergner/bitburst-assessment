@@ -1,5 +1,12 @@
-# Assessment: 
+# Assessment:
+## flags
+| flag | description | default|
+|------|------|-----|
+|src|endpoint url for object source eg `http://localhost:9010`| uses mock when not specified|
+|mock_db|whether to use the postgres db or a in-memory mock|false|
+|ol| the object lifespan in seconds| 30 |
 
+# Task
 Write a rest-service that listens on localhost:9090 for POST requests on /callback.
 Run the go service attached to this task. It will send requests to your service
 at a fixed interval of 5 seconds. The request body will look like this:

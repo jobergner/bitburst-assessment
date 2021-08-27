@@ -6,14 +6,14 @@ import (
 	"time"
 )
 
-type Handler struct {
+type ObjectHandler struct {
 	persistence   persist.Persistor
 	objectGetter  get.Getter
 	durationValid time.Duration
 }
 
-func NewHandler(pers persist.Persistor, getter get.Getter, durationValid time.Duration) *Handler {
-	return &Handler{
+func NewObjectHandler(pers persist.Persistor, getter get.Getter, durationValid time.Duration) *ObjectHandler {
+	return &ObjectHandler{
 		durationValid: durationValid,
 		persistence:   pers,
 		objectGetter:  getter,
