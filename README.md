@@ -1,6 +1,7 @@
 # Assessment:
 
 ## How to Run:
+(to not spend too much time on improving convenience this process is not automated)
 1. Start Postgres
 ```bash
 docker-compose up
@@ -18,11 +19,17 @@ go run .
 The Services should now be able to communicate with another.
 
 ## Testing:
+(to not spend too much time on improving convenience this process is not automated)
 1. Start Postgres
 ```bash
 docker-compose up
 ```
-2. Run Integration Test
+2. Start Service
+```bash
+# define object lifespan as 1s, use server started in integration test as object source
+go run . -ol=1 -src=http://localhost:9010
+```
+3. Run Integration Test
 ```bash
 go test ./...
 ```
