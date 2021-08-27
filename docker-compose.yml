@@ -9,23 +9,3 @@ services:
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     network_mode: "host"
-  # handler:
-  #   image: golang:latest
-  #   volumes:
-  #     - .:/home/assessment
-  #   ports:
-  #     - "9090:9090"
-  #   command: /bin/sh -c "cd /home/assessment/; go run .;"
-  #   depends_on:
-  #     - database
-  #   network_mode: "host"
-  # source:
-  #   image: golang:latest
-  #   volumes:
-  #     - .:/home/assessment
-  #   ports:
-  #     - "9010:9010"
-  #   command: /bin/sh -c "cd /home/assessment/objectsource/; go run .;"
-  #   depends_on:
-  #     - handler
-  #   network_mode: "host"

@@ -15,9 +15,15 @@ type RemoteObjectGetter struct {
 }
 
 func NewRemoteObjectGetter(url string) *RemoteObjectGetter {
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	t.MaxIdleConns = 200
+	t.MaxConnsPerHost = 200
+	t.MaxIdleConnsPerHost = 200
+
 	return &RemoteObjectGetter{
 		httpClient: http.Client{
-			Timeout: time.Second * 5,
+			Timeout:   time.Second * 5,
+			Transport: t,
 		},
 		url: url,
 	}
@@ -30,6 +36,7 @@ func (r RemoteObjectGetter) Get(objectID int) (object.Object, error) {
 	if err != nil {
 		return object.Object{}, fmt.Errorf("error fetching object from url %s: %s", url, err)
 	}
+	defer resp.Body.Close()
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

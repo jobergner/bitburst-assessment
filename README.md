@@ -57,6 +57,15 @@ Feel free to mess around in `/integrationtest/main_test.go`.
 |`/docker-compose.yml`|starts dockerized postgres instance (`docker-compose up`)|
 |`/init.sql`|describes table for db|
 
+## issues:
+When the object source service tried to make it's post requests to `/callback` it would reuse connections which were sometimes already closed by the peer, causing multiple errors:
+```
+Post http://localhost:9090/callback: read tcp 127.0.0.1:41312->127.0.0.1:9090: read: connection reset by peer
+Post http://localhost:9090/callback: EOF
+Post http://localhost:9090/callback: http: server closed idle connection
+```
+The only solution I found was to modify the code and close the request so the connection would not be reused. If there is a better solution please let me know.
+
 # Task
 Write a rest-service that listens on localhost:9090 for POST requests on /callback.
 Run the go service attached to this task. It will send requests to your service

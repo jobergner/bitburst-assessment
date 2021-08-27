@@ -19,7 +19,6 @@ func callbackHandler(h *handle.ObjectHandler) http.Handler {
 			http.Error(w, fmt.Sprintf("error reading request body: %s", err.Error()), 500)
 			return
 		}
-		defer r.Body.Close()
 
 		var c callbackBody
 		err = json.Unmarshal(b, &c)
