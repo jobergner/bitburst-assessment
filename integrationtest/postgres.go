@@ -1,4 +1,4 @@
-package main
+package integrationtest
 
 import (
 	"assessment/pkg/persist"
@@ -17,7 +17,7 @@ import (
 	"github.com/docker/go-connections/nat"
 )
 
-func waitForIt(killFunc func() error) {
+func waitForDB(killFunc func() error) {
 
 	var err error
 
@@ -109,7 +109,7 @@ func startPostgresContainer() (func() error, error) {
 
 	killFunc := func() error { return cli.ContainerKill(ctx, resp.ID, "SIGKILL") }
 
-	waitForIt(killFunc)
+	waitForDB(killFunc)
 
 	return killFunc, nil
 }

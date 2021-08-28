@@ -1,4 +1,4 @@
-package main
+package integrationtest
 
 import (
 	"assessment/pkg/object"
@@ -26,7 +26,7 @@ func serveObjectSource() *http.Server {
 	srv := &http.Server{
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
-		Addr:         OBJECT_SERVER_PORT,
+		Addr:         objectServerPort,
 		Handler:      mux,
 	}
 
@@ -45,7 +45,7 @@ func (tp testPoster) postIDs(ids ...int) error {
 		idStrings = append(idStrings, strconv.Itoa(id))
 	}
 	body := bytes.NewBuffer([]byte(fmt.Sprintf(`{"object_ids":[%s]}`, strings.Join(idStrings, ","))))
-	resp, err := tp.c.Post(fmt.Sprintf("http://localhost%s/callback", SERVICE_PORT), "application/json", body)
+	resp, err := tp.c.Post(fmt.Sprintf("http://localhost%s/callback", servicePort), "application/json", body)
 	if err != nil {
 		return err
 	}
