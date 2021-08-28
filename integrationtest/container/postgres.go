@@ -1,4 +1,4 @@
-package integrationtest
+package container
 
 import (
 	"assessment/pkg/persist"
@@ -33,7 +33,7 @@ func waitForDB(killFunc func() error) {
 	panic(fmt.Sprintf("%s %s", err, killFunc()))
 }
 
-func startPostgresContainer() (func() error, error) {
+func StartPostgres() (func() error, error) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {

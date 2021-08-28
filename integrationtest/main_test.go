@@ -1,17 +1,19 @@
 package integrationtest
 
 import (
+	"assessment/integrationtest/container"
 	"assessment/pkg/server"
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/joho/godotenv"
 )
 
-const objectLifespan = 1
-const objectServerPort = ":9010"
-const servicePort = ":9090"
+const (
+	objectLifespan = 1
+)
 
 func runTestCases(tester *integrationTester) {
 	// very basic post and expect
@@ -60,7 +62,7 @@ func TestService(t *testing.T) {
 		t.Fatalf("error reading env file: %s", err)
 	}
 
-	killPostgres, err := startPostgresContainer()
+	killPostgres, err := container.StartPostgres()
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -80,11 +82,18 @@ func TestService(t *testing.T) {
 	ctx := context.Background()
 
 	srv := server.Serve(servicePort, c)
+	isRunning := waitForIt(fmt.Sprintf("http://localhost%s", servicePort))
+	if !isRunning {
+		t.Fatalf("could not connect to service")
+	}
 	defer srv.Shutdown(ctx)
+
 	objectServer := serveObjectSource()
+	isRunning = waitForIt(fmt.Sprintf("http://localhost%s", objectServerPort))
+	if !isRunning {
+		t.Fatalf("could not connect to object server")
+	}
 	defer objectServer.Shutdown(ctx)
-	// wait for services to start (TODO: write wait-for-it method)
-	time.Sleep(time.Second)
 
 	runTestCases(tester)
 }

@@ -2,6 +2,8 @@ package main
 
 import (
 	"assessment/pkg/server"
+	"os"
+	"os/signal"
 
 	"github.com/joho/godotenv"
 
@@ -28,4 +30,8 @@ func main() {
 	}
 
 	server.Serve(":9090", c)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, os.Kill)
+	<-sig
 }

@@ -10,6 +10,11 @@ import (
 	"time"
 )
 
+const (
+	servicePort      = ":9090"
+	objectServerPort = ":9010"
+)
+
 func serveObjectSource() *http.Server {
 	mux := http.NewServeMux()
 	mux.Handle("/objects/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -60,4 +65,22 @@ func listObjectIDs(objs map[int]object.Object) []int {
 	}
 
 	return ids
+}
+
+func waitForIt(url string) bool {
+
+	for i := 0; i < 5; i++ {
+
+		resp, err := http.Get(url)
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == 404 {
+				return true
+			}
+		}
+
+		time.Sleep(time.Second / 2)
+	}
+
+	return false
 }
