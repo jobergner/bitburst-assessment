@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -16,7 +17,9 @@ func main() {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	go func() {
-		client := &http.Client{Timeout: 1 * time.Second}
+		t := http.DefaultTransport.(*http.Transport).Clone()
+		t.DisableKeepAlives = true
+		client := &http.Client{Timeout: 1 * time.Second, Transport: t}
 
 		for {
 			time.Sleep(5 * time.Second)
@@ -28,13 +31,13 @@ func main() {
 			body := bytes.NewBuffer([]byte(fmt.Sprintf(`{"object_ids":[%s]}`, strings.Join(ids, ","))))
 			req, err := http.NewRequest(http.MethodPost, "http://localhost:9090/callback", body)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				continue
 			}
-			req.Close = true
+			// req.Close = true
 			resp, err := client.Do(req)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				continue
 			}
 

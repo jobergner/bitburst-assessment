@@ -19,6 +19,7 @@ func NewRemoteObjectGetter(url string) *RemoteObjectGetter {
 	t.MaxIdleConns = 200
 	t.MaxConnsPerHost = 200
 	t.MaxIdleConnsPerHost = 200
+	t.IdleConnTimeout = 0
 
 	return &RemoteObjectGetter{
 		httpClient: http.Client{

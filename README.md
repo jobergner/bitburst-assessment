@@ -1,23 +1,31 @@
 # Assessment:
 
 ## How to Run:
+
 1. Start Postgres
+
 ```bash
 docker-compose up
 ```
+
 2. Start Service
+
 ```bash
 # uses localhost:9010 as object source
 go run . -src=http://localhost:9010
 ```
+
 3. Start Object Source
+
 ```bash
 # in /objectsource/
 go run .
 ```
+
 The Services should now be able to communicate with another.
 
 ## Testing:
+
 Feel free to mess around in `/integrationtest/main_test.go`.
 
 ```bash
@@ -25,37 +33,47 @@ go test ./...
 ```
 
 ## flags
-| flag | description | default|
-|------|------|-----|
-|src|endpoint url for object source eg `http://localhost:9010`| uses mock when not specified|
-|mock_db|whether to use the postgres db or an in-memory mock|false|
-|ol| the object lifespan in seconds| 30 |
 
+| flag    | description                                               | default                      |
+| ------- | --------------------------------------------------------- | ---------------------------- |
+| src     | endpoint url for object source eg `http://localhost:9010` | uses mock when not specified |
+| mock_db | whether to use the postgres db or an in-memory mock       | false                        |
+| ol      | the object lifespan in seconds                            | 30                           |
 
 ## project structure
-| name | description |
-|------|------|
-|`/integrationtest`|contains an integration test (end2end) |
-|`/objectsource`|the service I was provided with|
-|`/pkg/get`|logic for fetching objects from remote or from a mock|
-|`/pkg/handle`|logic for managing objects and their lifespans|
-|`/pkg/object`|nothing but object structure|
-|`/pkg/persist`|logic for object persistence in db or in-memory mock|
-|`/pkg/server`|server start logic|
-|`/.env`|environment variables read by postgres and service (committed for convenience)|
-|`/docker-compose.yml`|starts dockerized postgres instance (`docker-compose up`)|
-|`/init.sql`|describes table for db|
+
+| name                  | description                                                                    |
+| --------------------- | ------------------------------------------------------------------------------ |
+| `/integrationtest`    | contains an integration test (end2end)                                         |
+| `/objectsource`       | the service I was provided with                                                |
+| `/pkg/get`            | logic for fetching objects from remote or from a mock                          |
+| `/pkg/handle`         | logic for managing objects and their lifespans                                 |
+| `/pkg/object`         | nothing but object structure                                                   |
+| `/pkg/persist`        | logic for object persistence in db or in-memory mock                           |
+| `/pkg/server`         | server start logic                                                             |
+| `/.env`               | environment variables read by postgres and service (committed for convenience) |
+| `/docker-compose.yml` | starts dockerized postgres instance (`docker-compose up`)                      |
+| `/init.sql`           | describes table for db                                                         |
 
 ## issues:
-When the object source service tried to make it's post requests to `/callback` it would reuse connections which were sometimes already closed by the peer, causing multiple errors:
+
+When the object source service tried to make its post requests to `/callback` it would reuse connections which were sometimes already closed by the peer or by the cloent, causing multiple errors:
+
 ```
 Post http://localhost:9090/callback: read tcp 127.0.0.1:41312->127.0.0.1:9090: read: connection reset by peer
 Post http://localhost:9090/callback: EOF
 Post http://localhost:9090/callback: http: server closed idle connection
 ```
-The only solution I found was to modify the code and close the request so the connection would not be reused. If there is a better solution please let me know.
+
+The only solution I found was to modify the code to close connections so they would not be kept alive and close unexpectedly. If there is a better solution please let me know.
+
+common reasons for the errors:
+[http: server closed idle connection](https://stackoverflow.com/questions/42847294/how-to-catch-http-server-closed-idle-connection-error)
+
+[connection reset by peer](https://stackoverflow.com/questions/37774624/go-http-get-concurrency-and-connection-reset-by-peer)
 
 # Task
+
 Write a rest-service that listens on localhost:9090 for POST requests on /callback.
 Run the go service attached to this task. It will send requests to your service
 at a fixed interval of 5 seconds. The request body will look like this:
