@@ -5,14 +5,12 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
-	"os"
-	"os/signal"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func serve() *http.Server {
+func serveObjectSource() *http.Server {
 	mux := http.NewServeMux()
 	mux.Handle("/objects/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idRaw := strings.TrimPrefix(r.URL.Path, "/objects/")
@@ -28,22 +26,13 @@ func serve() *http.Server {
 	srv := &http.Server{
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
-		Addr:         ":9010",
+		Addr:         OBJECT_SERVER_PORT,
 		Handler:      mux,
 	}
 
 	go func() { _ = srv.ListenAndServe() }()
 
 	return srv
-}
-
-func main() {
-
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, os.Kill)
-	<-sig
-
-	fmt.Println("closing")
 }
 
 type testPoster struct {
@@ -56,7 +45,7 @@ func (tp testPoster) postIDs(ids ...int) error {
 		idStrings = append(idStrings, strconv.Itoa(id))
 	}
 	body := bytes.NewBuffer([]byte(fmt.Sprintf(`{"object_ids":[%s]}`, strings.Join(idStrings, ","))))
-	resp, err := tp.c.Post("http://localhost:9090/callback", "application/json", body)
+	resp, err := tp.c.Post(fmt.Sprintf("http://localhost%s/callback", SERVICE_PORT), "application/json", body)
 	if err != nil {
 		return err
 	}

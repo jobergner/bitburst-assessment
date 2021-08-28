@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"assessment/pkg/get"
@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-func configureObjectHandler() *handle.ObjectHandler {
+func configureObjectHandler(useMockDB bool, objectSource string, objectLifespan int64) *handle.ObjectHandler {
 	var persistence persist.Persistor
-	if !*useMockDB {
+	if !useMockDB {
 		persistence = persist.NewPostgres()
 	} else {
 		persistence = persist.NewMockPersistence()
@@ -21,11 +21,11 @@ func configureObjectHandler() *handle.ObjectHandler {
 	}
 
 	var getter get.Getter
-	if *objectSource != mockObjectSourceIdentifier {
-		getter = get.NewRemoteObjectGetter(*objectSource)
+	if objectSource != "" {
+		getter = get.NewRemoteObjectGetter(objectSource)
 	} else {
 		getter = &get.MockObjectGetter{}
 	}
 
-	return handle.NewObjectHandler(persistence, getter, time.Second*time.Duration(*objectLifespan))
+	return handle.NewObjectHandler(persistence, getter, time.Second*time.Duration(objectLifespan))
 }

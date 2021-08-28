@@ -2,12 +2,10 @@ package main
 
 import (
 	"assessment/pkg/persist"
-	"fmt"
 	"net/http"
 	"testing"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,21 +16,22 @@ type integrationTester struct {
 }
 
 func (it *integrationTester) postAndExpect(idsToPost, idsToExpect []int) {
-	it.tp.postIDs(idsToPost...)
-	time.Sleep(time.Millisecond * 5)
+	err := it.tp.postIDs(idsToPost...)
+	if err != nil {
+		it.t.Fatalf(err.Error())
+	}
+	time.Sleep(time.Millisecond * 100)
 	currentObjects, err := it.pg.GetObjects()
-	assert.Nil(it.t, err)
+	if err != nil {
+		it.t.Fatalf(err.Error())
+	}
 	assert.ElementsMatch(it.t, idsToExpect, listObjectIDs(currentObjects))
 }
 
-func newTester(t *testing.T) *integrationTester {
-	err := godotenv.Load("../.env")
-	if err != nil {
-		panic(fmt.Errorf("error reading env file: %s", err))
-	}
+func newTester(t *testing.T) (*integrationTester, error) {
 	pg := persist.NewPostgres()
 	if err := pg.Connect(); err != nil {
-		t.Fatalf("could not connect to postgres: %s", err)
+		return nil, err
 	}
 	client := &http.Client{Timeout: 1 * time.Second}
 	tp := testPoster{client}
@@ -40,5 +39,5 @@ func newTester(t *testing.T) *integrationTester {
 		pg: pg,
 		tp: tp,
 		t:  t,
-	}
+	}, nil
 }
