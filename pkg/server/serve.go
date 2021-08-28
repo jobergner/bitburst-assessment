@@ -29,7 +29,7 @@ func Serve(addr string, c ServerConfig) *http.Server {
 	fmt.Println("server running at", addr)
 	go func() {
 		err := srv.ListenAndServe()
-		if err != nil {
+		if err != nil && err != http.ErrServerClosed {
 			panic(err)
 		}
 	}()
