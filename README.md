@@ -1,7 +1,6 @@
 # Assessment:
 
 ## How to Run:
-(to not spend too much time on improving convenience this process is not automated)
 1. Start Postgres
 ```bash
 docker-compose up
@@ -19,22 +18,11 @@ go run .
 The Services should now be able to communicate with another.
 
 ## Testing:
-(to not spend too much time on improving convenience this process is not automated)
-1. Start Postgres
-```bash
-docker-compose up
-```
-2. Start Service
-```bash
-# define object lifespan as 1s, use server started in integration test as object source
-go run . -ol=1 -src=http://localhost:9010
-```
-3. Run Integration Test
+Feel free to mess around in `/integrationtest/main_test.go`.
+
 ```bash
 go test ./...
 ```
-
-Feel free to mess around in `/integrationtest/main_test.go`.
 
 ## flags
 | flag | description | default|
@@ -53,6 +41,7 @@ Feel free to mess around in `/integrationtest/main_test.go`.
 |`/pkg/handle`|logic for managing objects and their lifespans|
 |`/pkg/object`|nothing but object structure|
 |`/pkg/persist`|logic for object persistence in db or in-memory mock|
+|`/pkg/server`|server start logic|
 |`/.env`|environment variables read by postgres and service (committed for convenience)|
 |`/docker-compose.yml`|starts dockerized postgres instance (`docker-compose up`)|
 |`/init.sql`|describes table for db|
