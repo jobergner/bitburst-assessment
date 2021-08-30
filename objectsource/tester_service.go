@@ -17,9 +17,7 @@ func main() {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	go func() {
-		t := http.DefaultTransport.(*http.Transport).Clone()
-		t.DisableKeepAlives = true
-		client := &http.Client{Timeout: 1 * time.Second, Transport: t}
+		client := &http.Client{Timeout: 1 * time.Second}
 
 		for {
 			time.Sleep(5 * time.Second)

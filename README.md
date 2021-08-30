@@ -55,7 +55,7 @@ go test ./...
 | `/docker-compose.yml` | starts dockerized postgres instance (`docker-compose up`)                      |
 | `/init.sql`           | describes table for db                                                         |
 
-## issues:
+## issues (resolved):
 
 When the object source service tried to make its post requests to `/callback` it would reuse connections which were sometimes already closed by the peer or by the cloent, causing multiple errors:
 

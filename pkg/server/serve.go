@@ -20,6 +20,7 @@ func Serve(addr string, c ServerConfig) *http.Server {
 	mux.Handle("/callback", callbackHandler(h))
 
 	srv := &http.Server{
+		IdleTimeout:  10 * time.Second,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		Addr:         addr,
