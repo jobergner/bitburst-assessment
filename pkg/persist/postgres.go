@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -54,6 +55,18 @@ func (p *Postgres) DeleteObject(objectID int, lastSeen int64) error {
 	rows, err := p.db.Query("DELETE FROM object WHERE id=$1 AND lastSeen=$2", objectID, lastSeen)
 	if err != nil {
 		return fmt.Errorf("error deleting object with id `%d` from db: %s", objectID, err)
+	}
+	defer rows.Close()
+
+	return rows.Err()
+}
+
+func (p *Postgres) DeleteObjectsOlderThan(maxValidAge time.Duration) error {
+	earliestLastSeen := time.Now().Add(maxValidAge * -1).UnixNano()
+
+	rows, err := p.db.Query("DELETE FROM object WHERE lastSeen < $1", earliestLastSeen)
+	if err != nil {
+		return fmt.Errorf("error deleting objects older than %d: %s", earliestLastSeen, err)
 	}
 	defer rows.Close()
 

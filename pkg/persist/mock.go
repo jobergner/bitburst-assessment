@@ -64,6 +64,10 @@ func (m *MockPersistence) GetObjects() (map[int]object.Object, error) {
 	return objs, nil
 }
 
+func (m *MockPersistence) DeleteObjectsOlderThan(time.Duration) error {
+	return nil
+}
+
 func (m *MockPersistence) keepPrinting() {
 	ticker := time.NewTicker(time.Second)
 

@@ -2,6 +2,7 @@ package integrationtest
 
 import (
 	"assessment/integrationtest/container"
+	"assessment/pkg/object"
 	"assessment/pkg/server"
 	"context"
 	"fmt"
@@ -9,10 +10,11 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
-	objectLifespan = 1
+	objectLifespan = 1 * time.Second
 )
 
 func runTestCases(tester *integrationTester) {
@@ -20,7 +22,7 @@ func runTestCases(tester *integrationTester) {
 	tester.postAndExpect([]int{2, 4}, []int{2, 4})
 
 	// reset
-	time.Sleep(objectLifespan * time.Second)
+	time.Sleep(objectLifespan)
 
 	// expect table to be empty after object lifespan has passed
 	tester.postAndExpect([]int{}, []int{})
@@ -32,25 +34,25 @@ func runTestCases(tester *integrationTester) {
 	tester.postAndExpect([]int{4}, []int{2, 4})
 
 	// reset
-	time.Sleep(objectLifespan * time.Second)
+	time.Sleep(objectLifespan)
 
 	// basic post and expect
 	tester.postAndExpect([]int{2, 4}, []int{2, 4})
 
 	// wait half a lifespan
-	time.Sleep(objectLifespan * time.Second / 2)
+	time.Sleep(objectLifespan / 2)
 
 	// post only `2` to refresh lifespan while `4` remains untouched
 	tester.postAndExpect([]int{2}, []int{2, 4})
 
 	// wait half a lifespan
-	time.Sleep(objectLifespan * time.Second / 2)
+	time.Sleep(objectLifespan / 2)
 
 	// post nothing, expect `2` to still be there since only lifespan/2 has passed since last post of `2`
 	tester.postAndExpect([]int{}, []int{2})
 
 	// reset
-	time.Sleep(objectLifespan * time.Second)
+	time.Sleep(objectLifespan)
 
 	// post same id multiple times, but expect only one to be in table
 	tester.postAndExpect([]int{2, 2, 2, 2}, []int{2})
@@ -81,7 +83,10 @@ func TestService(t *testing.T) {
 
 	ctx := context.Background()
 
+	fillDB(tester)
 	srv := server.Serve(servicePort, c)
+	expectExpiredObjectsDeleted(tester)
+
 	isRunning := waitForIt(fmt.Sprintf("http://localhost%s", servicePort))
 	if !isRunning {
 		t.Fatalf("could not connect to service")
@@ -96,4 +101,43 @@ func TestService(t *testing.T) {
 	defer objectServer.Shutdown(ctx)
 
 	runTestCases(tester)
+}
+
+// check if the expired object got deleted after server startup
+func expectExpiredObjectsDeleted(tester *integrationTester) {
+	objs, err := tester.pg.GetObjects()
+	if err != nil {
+		tester.t.Fatalf(err.Error())
+	}
+
+	_, ok := objs[1]
+	assert.True(tester.t, ok)
+
+	_, ok = objs[2]
+	assert.False(tester.t, ok)
+
+	// wait and clear db before running next test cases
+	time.Sleep(objectLifespan)
+	tester.pg.DeleteObjectsOlderThan(objectLifespan)
+}
+
+// fillDB fills the postgres with some objects to check if initializing the server later removes expired objects on startup
+func fillDB(tester *integrationTester) {
+	object1 := object.Object{
+		ObjectID: 1,
+		Online:   true,
+		LastSeen: time.Now().UnixNano(),
+	}
+	tester.pg.WriteObject(object1)
+
+	object2 := object.Object{
+		ObjectID: 2,
+		Online:   true,
+		// setting an expired time
+		LastSeen: time.Now().Add(objectLifespan * -1).UnixNano(),
+	}
+	tester.pg.WriteObject(object2)
+
+	// wait for write
+	time.Sleep(time.Millisecond * 100)
 }

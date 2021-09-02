@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func configureObjectHandler(useMockDB bool, objectSource string, objectLifespan int64) *handle.ObjectHandler {
+func configureObjectHandler(useMockDB bool, objectSource string, objectLifespan time.Duration) *handle.ObjectHandler {
 	var persistence persist.Persistor
 	if !useMockDB {
 		persistence = persist.NewPostgres()
@@ -27,5 +27,5 @@ func configureObjectHandler(useMockDB bool, objectSource string, objectLifespan 
 		getter = &get.MockObjectGetter{}
 	}
 
-	return handle.NewObjectHandler(persistence, getter, time.Second*time.Duration(objectLifespan))
+	return handle.NewObjectHandler(persistence, getter, objectLifespan)
 }

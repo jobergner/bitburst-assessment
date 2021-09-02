@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+func (h *ObjectHandler) ClearExpiredObjects() error {
+	return h.persistence.DeleteObjectsOlderThan(h.objectLifespan)
+}
+
 func (h *ObjectHandler) Handle(objectID int) {
 	receivedAt := time.Now()
 
@@ -20,7 +24,7 @@ func (h *ObjectHandler) Handle(objectID int) {
 	}
 
 	o.LastSeen = receivedAt.UnixNano()
-	o.ValidUntil = receivedAt.Add(h.durationValid).UnixNano()
+	o.ValidUntil = receivedAt.Add(h.objectLifespan).UnixNano()
 
 	err = h.persistence.WriteObject(o)
 	if err != nil {

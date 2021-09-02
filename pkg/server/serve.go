@@ -8,13 +8,18 @@ import (
 
 type ServerConfig struct {
 	UseMockDB      bool
-	ObjectLifespan int64
+	ObjectLifespan time.Duration
 	ObjectSource   string
 }
 
 func Serve(addr string, c ServerConfig) *http.Server {
 
 	h := configureObjectHandler(c.UseMockDB, c.ObjectSource, c.ObjectLifespan)
+
+	err := h.ClearExpiredObjects()
+	if err != nil {
+		panic(err)
+	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/callback", callbackHandler(h))

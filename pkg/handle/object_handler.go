@@ -7,15 +7,15 @@ import (
 )
 
 type ObjectHandler struct {
-	persistence   persist.Persistor
-	objectGetter  get.Getter
-	durationValid time.Duration
+	persistence    persist.Persistor
+	objectGetter   get.Getter
+	objectLifespan time.Duration
 }
 
 func NewObjectHandler(pers persist.Persistor, getter get.Getter, durationValid time.Duration) *ObjectHandler {
 	return &ObjectHandler{
-		durationValid: durationValid,
-		persistence:   pers,
-		objectGetter:  getter,
+		objectLifespan: durationValid,
+		persistence:    pers,
+		objectGetter:   getter,
 	}
 }

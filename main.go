@@ -4,6 +4,7 @@ import (
 	"assessment/pkg/server"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/joho/godotenv"
 
@@ -26,7 +27,7 @@ func main() {
 	c := server.ServerConfig{
 		ObjectSource:   *objectSource,
 		UseMockDB:      *useMockDB,
-		ObjectLifespan: *objectLifespan,
+		ObjectLifespan: time.Duration(*objectLifespan) * time.Second,
 	}
 
 	server.Serve(":9090", c)
